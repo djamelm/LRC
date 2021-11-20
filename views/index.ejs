@@ -7,16 +7,7 @@
         <title>LRC Maker</title>
         <meta name="description" content="#">
         <meta name="keywords" content="#">
-        <link rel="icon" type="image/png" href="/favicons/favicon-32x32.png" sizes="32x32">
-        <link rel="icon" type="image/png" href="/favicons/favicon-16x16.png" sizes="16x16">
-        <link rel="shortcut icon" href="/favicons/favicon.ico">
-        <!--<link rel="manifest" href="https://lrc-maker.github.io/site.webmanifest">-->
-        <!--<link rel="mask-icon" href="https://lrc-maker.github.io/favicons/safari-pinned-tab.svg" color="#ff4081">-->
-        <!--<meta name="application-name" content="灯里的歌词滚动姬">-->
-        <!--<meta name="msapplication-TileColor" content="#ffffff">-->
-        <!--<meta name="theme-color" content="#ffffff">-->
-        <!--<meta name="msapplication-config" content="./favicons/browserconfig.xml">-->
-        <!--<meta name="apple-mobile-web-app-title" content="灯里的歌词滚动姬">-->
+        <link rel="shortcut icon" href="/favicon.ico">
         <style>
 	        .w3-striped-dark-grey tbody tr:nth-child(2n) {
             	background-color: #333;
@@ -45,58 +36,27 @@
 		            <!-- Edit tags -->
                     <div style='width: 100%'>
                         <div class="w3-container">
-                            <!--<div class="w3-row-padding" style="padding: 0px !important">
-                                <div class="w3-half" style="padding-left: 0px !important">
-                                    <label><b>numbere of piste</b></label>
-                                    <input class="w3-input w3-border w3-grey" type="text" placeholder="01">
-                                </div>
-                                <div class="w3-half" style="padding-right: 0px !important">
-                                    <label><b>/max</b></label>
-                                    <input class="w3-input w3-border w3-grey" type="text" placeholder="01">
-                                </div>
-                            </div>-->
+                            <ul id="info"></ul>
                             <label><b>Tilte</b></label>
-                            <input class="w3-input w3-border w3-grey" type="text" placeholder="Tilte">
+                            <input class="w3-input w3-border w3-grey" type="text" v-model="metadata.title" placeholder="Tilte">
                             <label><b>Artist</b></label>
-                            <input class="w3-input w3-border w3-grey" type="text" placeholder="Artist">
+                            <input class="w3-input w3-border w3-grey" type="text" v-model="metadata.artist" placeholder="Artist">
                             <label><b>Album</b></label>
-                            <input class="w3-input w3-border w3-grey" type="text" placeholder="Album">
-                            <!--<label><b>Album Artist</b></label>-->
-                            <!--<input class="w3-input w3-border w3-grey" type="text" placeholder="Album Artist">-->
-                            <!--<div class="w3-row-padding" style="padding: 0px !important">
-                                <div class="w3-third" style="padding-left: 0px !important">
-                                    <label><b>day</b></label>
-                                    <input class="w3-input w3-border w3-grey" type="text" placeholder="day">
-                                </div>
-                                <div class="w3-third">
-                                    <label><b>month</b></label>
-                                    <input class="w3-input w3-border w3-grey" type="text" placeholder="month">
-                                </div>
-                                <div class="w3-third" style="padding-right: 0px !important">
-                                    <label><b>year</b></label>
-                                    <input class="w3-input w3-border w3-grey" type="text" placeholder="year" disabled>
-                                </div>
-                            </div>-->
-                            <!--<label><b>Genre</b></label>-->
-                            <!--<input class="w3-input w3-border w3-grey" type="text" placeholder="Genre">-->
-                            <!--<label><b>Composer</b></label>-->
-                            <!--<input class="w3-input w3-border w3-grey" type="text" placeholder="Composer">-->
-                            <!--<label><b>Copyright</b></label>-->
-                            <!--<input class="w3-input w3-border w3-grey" type="text" placeholder="Copyright"-->
-                            <!--<label><b>language</b></label>-->
-                            <!--<input class="w3-input w3-border w3-grey" type="text" placeholder="Language">-->
+                            <input class="w3-input w3-border w3-grey" type="text" v-model="metadata.album" placeholder="Album">
+                            <label><b>Year</b></label>
+                            <input class="w3-input w3-border w3-grey" type="text" v-model="metadata.year" placeholder="Year">
                             <label><b>Lyrice</b></label>
-                            <textarea class="w3-input w3-border w3-grey" @keyup="lyrics" type="text" placeholder="Lyrice......."></textarea>
+                            <textarea class="w3-input w3-border w3-grey" @keyup="lyrics" type="text" placeholder="Lyrice......." v-model="metadata.lrc"></textarea>
                         </div>
                     <!-- Edit lyrics -->
                         <div class="w3-container">
                             <div class="w3-padding-16">
                                 <table class="w3-input w3-border w3-grey w3-margin-16 w3-left-align">
                                     <tbody>
-                                        <tr v-for="(ligne, i) in ligne">
+                                        <tr v-for="(ligne, i) in lrc">
                                             <th :data-index="i" @click="timer" :data-index="i" class="w3-text-black">[{{ligne.mm}}:{{ligne.ss}}.{{ligne.xx}}]</th>
                                             <th :data-time="ligne.time" @click="goto" class=""
-                                            :class="{'w3-text-black': ligne.time<curtime,'w3-text-grey':!(ligne.time<curtime)}">{{ligne.text}}</th>
+                                            :class="{'w3-text-black': ligne.time<audio.curtime,'w3-text-grey':!(ligne.time<audio.curtime)}">{{ligne.text}}</th>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -118,30 +78,30 @@
                         <i class="fas fa-undo"></i>
                     </button>
                     <button @click="playPause" class="neon-green">
-                        <i :class='{"fa-play": playbtn, "fa-pause": !playbtn}' class="fas"></i>
+                        <i :class='{"fa-play": audio.playbtn, "fa-pause": !audio.playbtn}' class="fas"></i>
                     </button>
                     <button @click="forward" class="neon-green">
                         <i class="fas fa-redo"></i>
                     </button>
                     <!-- Time -->
-                    <span id="curtimetext">{{ timecur.mm }}:{{ timecur.ss }}</span> / <span id="durtimetext">{{ timedur.mm }}:{{ timedur.ss }}</span>
+                    <span id="curtimetext">{{ curtime.mm }}:{{ curtime.ss }}</span> / <span id="durtimetext">{{ durtime.mm }}:{{ durtime.ss }}</span>
                     <div class="slider time-line-slider">
-                        <progress :value="curtime" min="0" :max="durtime"></progress>
-                        <input v-model="curtime" min="0" :max="durtime" type="range" step="1">
+                        <progress :value="audio.curtime" min="0" :max="audio.durtime"></progress>
+                        <input v-model="audio.curtime" min="0" :max="audio.durtime" type="range" step="1">
                     </div>
                     <!-- Speed -->
                     <button @click="speedbtn" class="neon-green">X {{speed}}</button>
                     <div class="slider playbackrate-slider">
-                        <progress :value="playbackRate" min="0" max='2'></progress>
-                        <input v-model="playbackRate" min="0" max="2" type="range" step="0.01">
+                        <progress :value="audio.playbackRate" min="0" max='2'></progress>
+                        <input v-model="audio.playbackRate" min="0" max="2" type="range" step="0.01">
                     </div>
                     <!-- Volume -->
                     <button @click="muted" class="neon-green">
-                        <i :class='{"fa-volume-mute": mute || vol<10, "fa-volume-up": vol>=75 && !mute, "fa-volume-down": vol<75 && vol>=40 && !mute, "fa-volume-off": vol<40 && vol>=10 && !mute}' class="fas"></i>
+                        <i :class='{"fa-volume-mute": audio.mute || audio.vol<10, "fa-volume-up": audio.vol>=75 && !audio.mute, "fa-volume-down": audio.vol<75 && audio.vol>=40 && !audio.mute, "fa-volume-off": audio.vol<40 && audio.vol>=10 && !audio.mute}' class="fas"></i>
                     </button>
                     <div class="slider volume-slider-slider">
-                        <progress :value="vol" min="0" max="100"></progress>
-                        <input v-model="vol" min="0" max="100" type="range" step="1">
+                        <progress :value="audio.vol" min="0" max="100"></progress>
+                        <input v-model="audio.vol" min="0" max="100" type="range" step="1">
                     </div>
                 </div>
             </section>
@@ -161,11 +121,12 @@
             </div>
         </div>
         <script charset="utf-8" src="/libs/jquery/3.5.0/jquery.js"></script>
-        <script charset="utf-8" src="/libs/shortcut.js/2.01.B/shortcut.js"></script>
+        <script charset="utf-8" src="/libs/shortcut/2.01.B/shortcut.js"></script>
         <script charset="utf-8" src="/libs/w3.js/1.04/w3.js"></script>
         <script charset="utf-8" src="/libs/vue/2.6.10/vue.js"></script>
         <script charset="utf-8" src="/libs/js-cookie/2.2.1/js.cookie.js"></script>
+        <script charset="utf-8" src="/libs/FileSaver.js/2.0.5/FileSaver.js"></script>
+        <script charset="utf-8" src="/js/jdataview.js"></script>
         <script charset="utf-8" src="/js/app.js"></script>
-        <script charset="utf-8" src="/js/index.js"></script>
 	</body>
 </html>

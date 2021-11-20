@@ -10,6 +10,7 @@
 
 	// Audio Object
 	var audio = window.audio = new Audio();
+	audio.src = "01. El Houcine Haddadh - Electronique.mp3";
 	audio.loop = false;
 	audio.volume = (Cookies.get('volume')==undefined)?0.8:Number(Cookies.get('volume'))/100
 
@@ -17,19 +18,35 @@
 	var vm = window.app = new Vue({
 		el: '#app',
 		data: {
-			timecur: {xx:"00",ss:"00",mm:"00"},
-			timedur: {xx:"00",ss:"00",mm:"00"},
-			curtime: 0,
-			durtime: 0,
-			vol: audio.volume*100,
-			mute: false,
-			speed: "1.00",
-			playbackRate: 1,
-			playbtn: false,
+			audio: {
+				curtime: 0,
+				durtime: 0,
+				vol: audio.volume*100,
+				mute: false,
+				playbackRate: 1,
+				playbtn: true,
+			},
 			page: "edit",
-			ligne:[
+			lrc:[
 				{time: '0', xx:'00', ss:'00', mm:'00', text:''}
-			]
+			],
+			metadata:{
+				title: '',
+				artist: '',
+				composer: '',
+				copyright: '',
+				album_artist: '',
+				album: '',
+				speed: '',
+				genre: '',
+				Cover: '',
+				piste: '',
+				cdmax: '',
+				lang: '',
+				year: '',
+				lrc:''
+			},
+
 		},
 		methods: {
 			goto: function(event){
@@ -38,25 +55,17 @@
 			playPause: function(){
 				if(audio.paused){
 					audio.play();
-					this.playbtn = true
 				} else {
 					audio.pause();
-					this.playbtn = false
 				}
 			},
 			muted: function(){
-				if(audio.muted){
-					audio.muted = false;
-					this.mute = false;
-				} else {
-					audio.muted = true;
-					this.mute = true;
-				}
+				audio.muted = !audio.muted;
+				this.audio.mute = audio.muted;
 			},
 			speedbtn: function(){
 				audio.playbackRate = 1
-				this.playbackRate = 1
-				this.speed = '1.00'
+				this.audio.playbackRate = 1
 			},
 			replay: function(){
 				audio.currentTime = audio.currentTime - 5 * audio.playbackRate;
@@ -66,59 +75,50 @@
 			},
 			lyrics: function(event){
 				var text = event.target.value
-				//vm.ligne=[]
 				a=text.split("\n")
 				$.each(a, function(n, elem) {
-					if(vm.ligne.length<n+1){
-						vm.ligne.push({time: '0', xx:'00', ss:'00', mm:'00', text:elem})
+					if(vm.lrc.length<n+1){
+						vm.lrc.push({time: '0', xx:'00', ss:'00', mm:'00', text:elem})
 					}else{
-						vm.ligne[n].text=elem
+						vm.lrc[n].text=elem
 					}
 				})
-				$.each(vm.ligne, function(n, elem) {
+				$.each(vm.lrc, function(n, elem) {
 					if(a.length<n+1){
-						vm.ligne.splice(n,1)
+						vm.lrc.splice(n,1)
 					}
 				})
 			},
 			timer: function(event){
 				var l =event.target.dataset.index
-				this.ligne[l].time=Math.floor(audio.currentTime*100);
-				var mm = Math.floor(audio.currentTime / 60);
-				var ss = Math.floor(audio.currentTime - mm * 60);
-				var xx = Math.floor((audio.currentTime - mm * 60 - ss) * 100);
-				this.ligne[l].xx=(xx < 10)?"0"+xx:xx
-				this.ligne[l].ss=(ss < 10)?"0"+ss:ss
-				this.ligne[l].mm=(mm < 10)?"0"+mm:mm
+				this.lrc[l]=time(Math.floor(audio.currentTime*100));
+				this.lrc[l].time=Math.floor(audio.currentTime*100);
 			},
-			goto: function(event){
-				audio.currentTime = event.target.dataset.time/100
+			time: function(val) {
+				mm = Math.floor((val/100) / 60),
+				ss = Math.floor((val/100) - mm * 60),
+				xx = Math.floor(((val/100) - mm * 60 - ss) * 100)
+				return {xx:(xx < 10)?"0"+xx:xx,ss:(ss < 10)?"0"+ss:ss,mm:(mm < 10)?"0"+mm:mm}
 			}
 		},
 		computed: {
-		    annee: {
-		        get: function(){
-	                moy=[0,0,0], coef=0, cre=[0,0,0]
-	                $.each(this.clcunite, function(i, v){
-	                    moy[1] += Number(v.moy[0])*Number(v.coef)
-	                    moy[2] += Number(v.moy[1])*Number(v.coef)
-	                    coef += Number(v.coef)
-	                    cre[1] += Number(v.cre[0])
-	                    cre[2] += Number(v.cre[1])
-	                })
-	                moy[1] = Number((moy[1]/coef).toFixed(2))
-	                moy[2] = Number((moy[2]/coef).toFixed(2))
-	                moy[0] = Number(((Number(moy[1])+Number(moy[2]))/2).toFixed(2))
-	                if(moy[1]>=10||moy[0]>=10){
-	                    cre[1] = 30
-	                }else if(moy[2]>=10||moy[0]>=10){
-	                    cre[2] = 30
-	                }
-	                cre[0]=cre[1]+cre[2]
-	                this.moyenne = moy
-	                return {moy:moy,cre:cre}
-		        }
-		    }
+			speed: function () {
+			  return Number(this.audio.playbackRate).toFixed(2);
+			},
+			durtime: function () {
+				val=this.audio.durtime
+				mm = Math.floor((val/100) / 60),
+				ss = Math.floor((val/100) - mm * 60),
+				xx = Math.floor(((val/100) - mm * 60 - ss) * 100)
+				return {xx:(xx < 10)?"0"+xx:xx,ss:(ss < 10)?"0"+ss:ss,mm:(mm < 10)?"0"+mm:mm}
+			},
+			curtime: function () {
+				val=this.audio.curtime
+				mm = Math.floor((val/100) / 60),
+				ss = Math.floor((val/100) - mm * 60),
+				xx = Math.floor(((val/100) - mm * 60 - ss) * 100)
+				return {xx:(xx < 10)?"0"+xx:xx,ss:(ss < 10)?"0"+ss:ss,mm:(mm < 10)?"0"+mm:mm}
+			}
         }
 	})
 	// Event
@@ -126,16 +126,13 @@
 		switchTrack(audio.src);
 	});
 	$(audio).on('loadeddata', function() {
-		audio.play()
 		timeupdate()
 	});
 	$(audio).on('timeupdate', function(){
 		timeupdate()
-		if(audio.paused){
-			vm.playbtn = false
-		} else {
-			vm.playbtn = true
-		}
+	});
+	$(audio).on('pause', function(){
+		vm.audio.playbtn = false
 	});
 	$(".time-line-slider>input").on("click mouseup mousedown", function(event){
 		audio.pause();
@@ -148,21 +145,18 @@
 	})
 	$(".playbackrate-slider>input").on("mouseup", function(event){
 		audio.playbackRate = this.value
-		vm.speed = Number(this.value).toFixed(2)
 	})
 	// Function
-	Number.prototype.time = function() {
-		var t,
-			mm = Math.floor((this/100) / 60),
-			ss = Math.floor((this/100) - mm * 60),
-			xx = Math.floor(((this/100) - mm * 60 - ss) * 100)
+	window.time = function(val) {
+			mm = Math.floor((val/100) / 60),
+			ss = Math.floor((val/100) - mm * 60),
+			xx = Math.floor(((val/100) - mm * 60 - ss) * 100)
 		return {xx:(xx < 10)?"0"+xx:xx,ss:(ss < 10)?"0"+ss:ss,mm:(mm < 10)?"0"+mm:mm}
 	}
 	function timeupdate(){
-		vm.durtime = Number(audio.duration*100)
-		vm.curtime = Number(audio.currentTime*100)
-		vm.timedur = Number(audio.duration*100).time()
-		vm.timecur = Number(audio.currentTime*100).time()
+		vm.audio.durtime = Number(audio.duration*100)
+		vm.audio.curtime = Number(audio.currentTime*100)
+		vm.audio.playbtn = !audio.paused
 	}
 	function switchTrack(e){
 		var file, objectUrl;
@@ -179,7 +173,7 @@
 			audio.src = objectUrl;
 		}
 	}
-document.querySelector("#open").addEventListener("change", switchTrack);
+	document.querySelector("#open").addEventListener("change", switchTrack);
 })()
 $('#modal_settings_input_downloadTracksLocation').on('click', function () {
 	let originalValue = $(this).val();
@@ -190,8 +184,6 @@ $('#modal_settings_input_downloadTracksLocation').on('click', function () {
 		$(this).val(newValue);
 	}
 });
-//var file = new File(["Hello, world!"], "hello world.txt", {type: "text/plain;charset=utf-8"});
-//FileSaver.saveAs(file);
 shortcut.add("ctrl + k", function() {
 	if(audio.paused){
 		audio.play();
@@ -199,10 +191,26 @@ shortcut.add("ctrl + k", function() {
 		audio.pause();
 	}
 });
-/********************************************************************/
-audio.src = "/assets/mp3/02. Hayce Lemsi - Havana"
-	/*var dialog = remote.dialog;
-let newValue = dialog.showOpenDialog({
-		properties: ['openDirectory']
-	})
-	console.log(newValue)*/
+document.querySelector('input[type="file"]').onchange = function(e) {
+	var reader = new FileReader();
+	reader.onload = function(e) {
+		var dv = new jDataView(this.result);
+		// "TAG" starts at byte -128 from EOF.
+		// See http://en.wikipedia.org/wiki/ID3
+		if (dv.getString(3, dv.byteLength - 128) == 'TAG') {
+			var title = dv.getString(30, dv.tell());
+			var artist = dv.getString(30, dv.tell());
+			var album = dv.getString(30, dv.tell());
+			var year = dv.getString(4, dv.tell());
+			app.metadata.title=title;
+			app.metadata.artist=artist;
+			app.metadata.album_artist=artist;
+			app.metadata.album=album;
+			app.metadata.year=year;
+		}
+   	};
+   	reader.readAsArrayBuffer(this.files[0]);
+	var data = "[ti:titre]\n[ar:artiste]\n[al:album]"
+	var file = new Blob([data], {type: "text/plain;charset=utf-8"});
+	saveAs(file, app.metadata.artist+" - "+app.metadata.title+".lrc");
+ };
